@@ -1,0 +1,7 @@
+Network Manager
+If the below does not work:
+
+nmcli device wifi connect "Your_SSID" password "Your_Password"
+Below does:
+
+sudo nmcli device wifi connect "SSID" password "PASSWORD" bssid ##:##:##:##:##:##
