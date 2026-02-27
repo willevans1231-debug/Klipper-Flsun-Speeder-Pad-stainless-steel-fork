@@ -1,0 +1,48 @@
+If Fix 1 dosent work
+
+### === Klipper Python environment fix ===
+
+set -e  # stop on error
+
+echo "==> Ensuring UTF-8 locale (prevents pip encoding errors)"
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+sudo bash -c 'echo "LANG=en_US.UTF-8" > /etc/default/locale'
+sudo locale-gen en_US.UTF-8 >/dev/null 2>&1 || true
+
+echo "==> Moving to Klipper directory"
+cd ~/klipper || { echo "Klipper directory not found!"; exit 1; }
+
+echo "==> Removing old virtual environment"
+rm -rf klippy-env
+
+echo "==> Creating new Python 3 virtual environment"
+python3 -m venv klippy-env
+source klippy-env/bin/activate
+
+echo "==> Upgrading pip, setuptools, and wheel"
+python -m pip install --upgrade pip setuptools wheel
+
+echo "==> Installing Klipper requirements"
+pip install --no-cache-dir -r scripts/klippy-requirements.txt || true
+
+echo "==> Forcing Python3-compatible aenum version"
+pip install --no-cache-dir "aenum==2.2.6" --force-reinstall
+
+echo "==> Verifying installation"
+python - <<'EOF'
+import sys
+print("Python:", sys.version)
+try:
+    import aenum
+    print("aenum version:", getattr(aenum, "__version__", "unknown"))
+    print("aenum file:", aenum.__file__)
+except Exception as e:
+    print("aenum import failed:", e)
+EOF
+
+echo "==> Listing key packages"
+pip list | egrep 'aenum|python-can|msgspec|cffi|greenlet' || true
+
+echo "==> Done. Klipper Python environment rebuilt successfully!"
+echo "If this was part of install-octopi.sh or make, re-run that now."
