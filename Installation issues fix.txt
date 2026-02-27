@@ -1,0 +1,152 @@
+
+
+OS Configurations
+.
+.
+.
+Network Manager
+If the below does not work:
+
+nmcli device wifi connect "Your_SSID" password "Your_Password"
+Below does:
+
+sudo nmcli device wifi connect "SSID" password "PASSWORD" bssid ##:##:##:##:##:##
+.
+.
+.
+Klipper Installation
+.
+When Deleting Flsun Builds, Kiauh will fail to launch. Fix Kiauh with:
+Step 1: Fix ownership
+sudo chown -R pi:pi /home/pi/kiauh
+Step 2: Make the script executable
+chmod +x /home/pi/kiauh/kiauh.sh
+Step 3: Run KIAUH normally (no sudo)
+./kiauh/kiauh.sh
+.
+Under Install Official Builds (1 instance)
+Klipper install will Fail at this stage.
+Fix: Create a clean environment and lock aenum version
+Run each command step-by-step:
+sudo rm -rf /home/pi/klippy-env
+
+sudo apt update
+
+sudo apt install -y python3-virtualenv python3-dev python3-setuptools
+
+python3 -m virtualenv -p python3 ~/klippy-env
+
+source ~/klippy-env/bin/activate
+
+pip install --upgrade pip wheel setuptools
+
+pip install "aenum==3.1.15"
+
+pip install "importlib-metadata>=4.6"
+
+deactivate
+Then launch KIAUH again:
+./kiauh/kiauh.sh
+When you get this:
+Virtualenv already exists. Re-create? (y/N):
+select no by typing n
+.
+.
+Update Motherboard Firmware
+.
+.
+.
+Klipper Configurations
+.
+Get USB Serial from Motherboard
+After fixing USB Serial, the printer will still not connect to the Speeder Pad. This is because of an aenum version incompatibility issue. Fix this with:
+
+Step 1 – Remove the broken package
+source /home/pi/klippy-env/bin/activate
+
+pip uninstall -y aenum
+
+Step 2 – Install a compatible version
+Version 3.1.11 works fine with Python 3.9:
+pip install aenum==3.1.11
+
+Step 3 – Re-install the rest of the Klipper requirements
+pip install -r /home/pi/klipper/scripts/klippy-requirements.txt
+
+deactivate
+
+
+
+Step 4 – Restart and test Klipper
+sudo systemctl restart klipper
+
+sudo systemctl status klipper
+
+If everything loads correctly, you should see:
+Active: active (running)
+
+
+.
+.
+.
+Continue with the Installation…
+.
+
+
+
+
+
+
+
+
+
+
+IF THE ABOVE DOSEN'T WORK
+
+### === Klipper Python environment fix ===
+
+set -e  # stop on error
+
+echo "==> Ensuring UTF-8 locale (prevents pip encoding errors)"
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+sudo bash -c 'echo "LANG=en_US.UTF-8" > /etc/default/locale'
+sudo locale-gen en_US.UTF-8 >/dev/null 2>&1 || true
+
+echo "==> Moving to Klipper directory"
+cd ~/klipper || { echo "Klipper directory not found!"; exit 1; }
+
+echo "==> Removing old virtual environment"
+rm -rf klippy-env
+
+echo "==> Creating new Python 3 virtual environment"
+python3 -m venv klippy-env
+source klippy-env/bin/activate
+
+echo "==> Upgrading pip, setuptools, and wheel"
+python -m pip install --upgrade pip setuptools wheel
+
+echo "==> Installing Klipper requirements"
+pip install --no-cache-dir -r scripts/klippy-requirements.txt || true
+
+echo "==> Forcing Python3-compatible aenum version"
+pip install --no-cache-dir "aenum==2.2.6" --force-reinstall
+
+echo "==> Verifying installation"
+python - <<'EOF'
+import sys
+print("Python:", sys.version)
+try:
+    import aenum
+    print("aenum version:", getattr(aenum, "__version__", "unknown"))
+    print("aenum file:", aenum.__file__)
+except Exception as e:
+    print("aenum import failed:", e)
+EOF
+
+echo "==> Listing key packages"
+pip list | egrep 'aenum|python-can|msgspec|cffi|greenlet' || true
+
+echo "==> Done. Klipper Python environment rebuilt successfully!"
+echo "If this was part of install-octopi.sh or make, re-run that now."
+
