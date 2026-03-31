@@ -4,6 +4,10 @@ OS Configurations
 .
 .
 .
+
+
+
+
 Network Manager
 If the below does not work:
 
@@ -14,6 +18,13 @@ sudo nmcli device wifi connect "SSID" password "PASSWORD" bssid ##:##:##:##:##:#
 .
 .
 .
+
+
+
+
+
+
+
 Klipper Installation
 .
 When Deleting Flsun Builds, Kiauh will fail to launch. Fix Kiauh with:
@@ -50,12 +61,25 @@ Then launch KIAUH again:
 When you get this:
 Virtualenv already exists. Re-create? (y/N):
 select no by typing n
+
+
+
+
+
+
+
 .
 .
 Update Motherboard Firmware
 .
 .
 .
+
+
+
+
+
+
 Klipper Configurations
 .
 Get USB Serial from Motherboard
